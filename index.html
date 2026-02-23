@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domino Score</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#0b0b10;
+color:white;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+.team{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:space-between;
+padding:20px;
+}
+
+.left{
+border-right:1px solid #222;
+}
+
+.name{
+font-size:20px;
+margin-top:10px;
+}
+
+.score{
+font-size:50px;
+margin-bottom:40px;
+}
+
+.btn{
+width:70px;
+height:70px;
+border-radius:50%;
+border:none;
+font-size:30px;
+color:white;
+}
+
+.blue{background:#2196f3;}
+.red{background:#ff3b30;}
+
+.panel{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#1b1b22;
+border-radius:20px 20px 0 0;
+padding:20px;
+display:none;
+}
+
+.domino-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-top:10px;
+}
+
+.domino{
+border:3px solid #ff3b30;
+border-radius:12px;
+height:80px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+}
+
+.calc{
+margin-top:10px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+}
+
+.calc button{
+padding:15px;
+font-size:18px;
+border:none;
+border-radius:8px;
+}
+
+.op{background:orange;color:white;}
+.equal{background:#4caf50;color:white;}
+.clear{background:#ff3b30;color:white;}
+
+.footer{
+display:flex;
+justify-content:space-between;
+margin-top:15px;
+}
+
+.footer button{
+padding:10px 20px;
+border:none;
+border-radius:10px;
+font-size:16px;
+}
+
+.add{background:#4caf50;color:white;}
+.cancel{background:#888;color:white;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="team left">
+<div>
+<div class="name">Team Blue</div>
+</div>
+
+<div class="score" id="scoreLeft">0</div>
+
+<button class="btn blue" onclick="openPanel('left')">+</button>
+</div>
+
+
+<div class="team">
+<div>
+<div class="name">Team Red</div>
+</div>
+
+<div class="score" id="scoreRight">0</div>
+
+<button class="btn red" onclick="openPanel('right')">+</button>
+</div>
+
+</div>
+
+
+<div class="panel" id="panel">
+
+<div>Selected: <span id="selected">0</span></div>
+
+<div class="domino-grid">
+<div class="domino" onclick="add(1)">1</div>
+<div class="domino" onclick="add(2)">2</div>
+<div class="domino" onclick="add(3)">3</div>
+<div class="domino" onclick="add(4)">4</div>
+<div class="domino" onclick="add(5)">5</div>
+<div class="domino" onclick="add(6)">6</div>
+</div>
+
+
+<div class="calc">
+<button onclick="num(7)">7</button>
+<button onclick="num(8)">8</button>
+<button onclick="num(9)">9</button>
+<button class="op" onclick="op('/')">÷</button>
+
+<button onclick="num(4)">4</button>
+<button onclick="num(5)">5</button>
+<button onclick="num(6)">6</button>
+<button class="op" onclick="op('*')">×</button>
+
+<button onclick="num(1)">1</button>
+<button onclick="num(2)">2</button>
+<button onclick="num(3)">3</button>
+<button class="op" onclick="op('-')">−</button>
+
+<button onclick="num(0)">0</button>
+<button onclick="dot()">.</button>
+<button class="equal" onclick="calc()">=</button>
+<button class="op" onclick="op('+')">+</button>
+
+<button class="clear" onclick="clearAll()">AC</button>
+</div>
+
+<div class="footer">
+<button class="cancel" onclick="closePanel()">Cancel</button>
+<button class="add" onclick="submitScore()">Add</button>
+</div>
+
+</div>
+
+
+<script>
+
+let side=null
+let value=0
+let exp=""
+
+function openPanel(s){
+side=s
+document.getElementById("panel").style.display="block"
+}
+
+function closePanel(){
+document.getElementById("panel").style.display="none"
+value=0
+exp=""
+update()
+}
+
+function update(){
+document.getElementById("selected").innerText=value
+}
+
+function add(v){
+value+=v
+update()
+}
+
+function num(n){
+exp+=n
+value=Number(exp)
+update()
+}
+
+function op(o){
+exp+=o
+}
+
+function dot(){
+exp+="."
+}
+
+function calc(){
+try{
+value=eval(exp)
+exp=value
+update()
+}catch{}
+}
+
+function clearAll(){
+exp=""
+value=0
+update()
+}
+
+function submitScore(){
+
+if(side==="left"){
+let el=document.getElementById("scoreLeft")
+el.innerText=Number(el.innerText)+value
+}
+
+if(side==="right"){
+let el=document.getElementById("scoreRight")
+el.innerText=Number(el.innerText)+value
+}
+
+closePanel()
+}
+
+</script>
+
+</body>
+</html>
