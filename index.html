@@ -1,267 +1,901 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Domino Score</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Domino Score Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-body{
-margin:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#0b0b10;
-color:white;
-}
+    :root {
+      --bg: #0d0d0f;
+      --surface: #161618;
+      --border: #2a2a2e;
+      --blue: #2196F3;
+      --blue-dim: #1565C0;
+      --red: #F44336;
+      --red-dim: #B71C1C;
+      --gold: #FFD700;
+      --text: #f0f0f0;
+      --muted: #666;
+      --pip: #fff;
+    }
 
-.container{
-display:flex;
-height:100vh;
-}
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      overflow: hidden;
+    }
 
-.team{
-flex:1;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:space-between;
-padding:20px;
-}
+    /* === TOP BAR === */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .topbar h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
+    .topbar .reset-btn {
+      position: absolute;
+      left: 16px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .topbar .reset-btn:active { color: var(--text); }
 
-.left{
-border-right:1px solid #222;
-}
+    /* === MAIN LAYOUT === */
+    .arena {
+      display: flex;
+      height: calc(100vh - 52px - 72px);
+      overflow: hidden;
+    }
 
-.name{
-font-size:20px;
-margin-top:10px;
-}
+    .team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .team:first-child { border-right: 1px solid var(--border); }
 
-.score{
-font-size:50px;
-margin-bottom:40px;
-}
+    .team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      padding: 2px 10px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .team-name:active { background: rgba(255,255,255,0.08); }
+    .team--blue .team-name { color: var(--blue); }
+    .team--red .team-name { color: var(--red); }
 
-.btn{
-width:70px;
-height:70px;
-border-radius:50%;
-border:none;
-font-size:30px;
-color:white;
-}
+    .wins-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .team--blue .wins-badge { background: var(--blue-dim); color: #fff; }
+    .team--red .wins-badge { background: var(--red-dim); color: #fff; }
+    .wins-badge .trophy { font-size: 13px; }
 
-.blue{background:#2196f3;}
-.red{background:#ff3b30;}
+    .score-list {
+      flex: 1;
+      width: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 4px;
+    }
+    .score-list::-webkit-scrollbar { display: none; }
 
-.panel{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:#1b1b22;
-border-radius:20px 20px 0 0;
-padding:20px;
-display:none;
-}
+    .score-entry {
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      line-height: 1.1;
+      padding: 0 6px;
+      animation: fadeSlide 0.25s ease;
+      cursor: pointer;
+    }
+    .team--blue .score-entry { color: var(--blue); }
+    .team--red .score-entry { color: var(--red); }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-.domino-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-margin-top:10px;
-}
+    .win-banner {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      animation: fadeSlide 0.25s ease;
+    }
+    .win-banner--blue { color: var(--gold); background: rgba(255,215,0,0.12); text-align: left; }
+    .win-banner--red  { color: var(--gold); background: rgba(255,215,0,0.12); text-align: right; }
 
-.domino{
-border:3px solid #ff3b30;
-border-radius:12px;
-height:80px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
-}
+    /* === BOTTOM BAR === */
+    .bottombar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
 
-.calc{
-margin-top:10px;
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-}
+    .team-bottom {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .team-bottom:first-child { border-right: 1px solid var(--border); }
 
-.calc button{
-padding:15px;
-font-size:18px;
-border:none;
-border-radius:8px;
-}
+    .total-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      line-height: 1;
+    }
+    .team--blue .total-score { color: var(--blue); }
+    .team--red .total-score { color: var(--red); }
 
-.op{background:orange;color:white;}
-.equal{background:#4caf50;color:white;}
-.clear{background:#ff3b30;color:white;}
+    .add-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      font-size: 26px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, filter 0.1s;
+      margin-bottom: 2px;
+    }
+    .add-btn:active { transform: scale(0.9); filter: brightness(0.8); }
+    .team--blue .add-btn { background: var(--blue); color: #fff; }
+    .team--red .add-btn { background: var(--red); color: #fff; }
 
-.footer{
-display:flex;
-justify-content:space-between;
-margin-top:15px;
-}
+    /* === MODAL === */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
 
-.footer button{
-padding:10px 20px;
-border:none;
-border-radius:10px;
-font-size:16px;
-}
+    .modal {
+      background: #1e1e22;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 18px 28px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
 
-.add{background:#4caf50;color:white;}
-.cancel{background:#888;color:white;}
-</style>
+    /* Tabs */
+    .modal-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2a2a2e;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--active-color, var(--blue)); color: #fff; }
+
+    /* Numpad */
+    .numpad-display {
+      text-align: right;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      color: var(--text);
+      padding: 8px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+      min-height: 58px;
+      letter-spacing: 2px;
+    }
+    .numpad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-bottom: 9px;
+    }
+    .numpad-bottom {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 9px;
+    }
+    .numpad-done-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      margin-bottom: 4px;
+    }
+    .numpad-key {
+      padding: 15px 0;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2a2a2e;
+      color: var(--text);
+      transition: transform 0.1s, filter 0.1s;
+      text-align: center;
+    }
+    .numpad-key:active { transform: scale(0.93); filter: brightness(0.8); }
+    .numpad-key.op     { background: #e67e22; color: #fff; }
+    .numpad-key.del    { background: #c0392b; color: #fff; }
+    .numpad-key.ac     { background: #e74c3c; color: #fff; }
+    .numpad-key.done   { background: #27ae60; color: #fff; font-size: 20px; }
+    .numpad-key.cancel { background: #3a3a3e; color: var(--muted); }
+
+    /* Dice picker */
+    .dice-section { display: none; }
+    .dice-section.active { display: block; }
+    .numpad-section { display: none; }
+    .numpad-section.active { display: block; }
+
+    .dice-selected {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      text-align: center;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .dice-selected span { font-size: 18px; color: var(--muted); }
+
+    .dice-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 36px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .dice-preview-pip {
+      font-size: 18px;
+      color: var(--muted);
+    }
+    .dice-preview-tile {
+      width: 30px; height: 30px;
+      border: 2px solid currentColor;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+    }
+
+    .dice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .dice-tile {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 3px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      display: grid;
+      padding: 10%;
+      transition: border-color 0.15s;
+      background: #1a1a1f;
+    }
+    .dice-tile.selected { border-color: var(--active-color, var(--blue)); }
+    .dice-tile .pip {
+      width: 20%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--pip);
+      place-self: center;
+    }
+    .dice-tile.selected .pip { background: var(--active-color, var(--blue)); }
+
+    /* Dice pip layouts using CSS grid areas */
+    .dice-1 { grid-template: "a" / 1fr; }
+    .dice-2 { grid-template: "a ." ". b" / 1fr 1fr; }
+    .dice-3 { grid-template: "a ." ". b" ". c" / 1fr 1fr; }
+    .dice-3 .pip:nth-child(3) { grid-area: c; align-self: end; }
+    .dice-4 { grid-template: "a b" "c d" / 1fr 1fr; }
+    .dice-5 { grid-template: "a b" "c d" "e ." / 1fr 1fr; }
+    .dice-5 .pip:nth-child(5) { grid-column: 1 / -1; justify-self: center; }
+    .dice-6 { grid-template: "a b" "c d" "e f" / 1fr 1fr; }
+
+    .dice-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .dice-cancel-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: #3a3a3e;
+      color: var(--muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .dice-add-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: var(--active-color, var(--blue));
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .dice-add-btn:disabled { opacity: 0.4; }
+
+    /* WIN MODAL */
+    .win-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .win-modal-overlay.open { display: flex; }
+    .win-modal {
+      background: #1e1e22;
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      width: 85%;
+      animation: popIn 0.3s cubic-bezier(.34,1.56,.64,1);
+      border: 1px solid var(--border);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .win-trophy { font-size: 60px; margin-bottom: 8px; }
+    .win-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+    .win-subtitle {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .win-actions { display: flex; gap: 10px; }
+    .win-continue-btn, .win-reset-btn {
+      flex: 1; padding: 13px;
+      border-radius: 12px; border: none;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+    }
+    .win-continue-btn { background: #27ae60; color: #fff; }
+    .win-reset-btn { background: #3a3a3e; color: var(--text); }
+
+    /* Name Edit */
+    .name-edit-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .name-edit-overlay.open { display: flex; }
+    .name-edit-box {
+      background: #1e1e22;
+      border-radius: 16px;
+      padding: 24px;
+      width: 82%;
+      border: 1px solid var(--border);
+    }
+    .name-edit-box h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .name-input {
+      width: 100%;
+      background: #2a2a2e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+      margin-bottom: 14px;
+    }
+    .name-edit-actions { display: flex; gap: 8px; }
+    .name-ok-btn, .name-cancel-btn {
+      flex: 1; padding: 11px;
+      border-radius: 10px; border: none;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+    }
+    .name-ok-btn { background: var(--active-color, #2196F3); color: #fff; }
+    .name-cancel-btn { background: #3a3a3e; color: var(--muted); }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
-
-<div class="team left">
-<div>
-<div class="name">Team Blue</div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="reset-btn" onclick="fullReset()">↺</button>
+  <h1>🁣 DOMINO SCORE</h1>
 </div>
 
-<div class="score" id="scoreLeft">0</div>
+<!-- MAIN ARENA -->
+<div class="arena">
+  <!-- BLUE TEAM -->
+  <div class="team team--blue" id="teamBlue">
+    <div class="team-name" onclick="editName('blue')" id="nameBlue">TIM BIRU</div>
+    <div class="wins-badge">
+      <span class="trophy">🏆</span>
+      <span id="winsBlue">0</span>
+    </div>
+    <div class="score-list" id="listBlue"></div>
+  </div>
 
-<button class="btn blue" onclick="openPanel('left')">+</button>
+  <!-- RED TEAM -->
+  <div class="team team--red" id="teamRed">
+    <div class="team-name" onclick="editName('red')" id="nameRed">TIM MERAH</div>
+    <div class="wins-badge">
+      <span class="trophy">🏆</span>
+      <span id="winsRed">0</span>
+    </div>
+    <div class="score-list" id="listRed"></div>
+  </div>
 </div>
 
-
-<div class="team">
-<div>
-<div class="name">Team Red</div>
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <div class="team-bottom team--blue">
+    <button class="add-btn" onclick="openModal('blue')">+</button>
+    <div class="total-score" id="totalBlue">0</div>
+  </div>
+  <div class="team-bottom team--red">
+    <button class="add-btn" onclick="openModal('red')">+</button>
+    <div class="total-score" id="totalRed">0</div>
+  </div>
 </div>
 
-<div class="score" id="scoreRight">0</div>
+<!-- ADD SCORE MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabNumpad" onclick="switchTab('numpad')">⌨ Angka</button>
+      <button class="tab-btn" id="tabDice" onclick="switchTab('dice')">🎲 Dadu</button>
+    </div>
 
-<button class="btn red" onclick="openPanel('right')">+</button>
+    <!-- NUMPAD SECTION -->
+    <div class="numpad-section active" id="numpadSection">
+      <div class="numpad-display" id="numpadDisplay">0</div>
+
+      <!-- Row 1: AC ⌫ ÷ × -->
+      <div class="numpad-grid">
+        <button class="numpad-key ac"  onclick="numpadAC()">AC</button>
+        <button class="numpad-key del" onclick="numpadDel()">⌫</button>
+        <button class="numpad-key op"  onclick="numpadOp('÷')">÷</button>
+        <button class="numpad-key op"  onclick="numpadOp('×')">×</button>
+
+        <!-- Row 2: 7 8 9 − -->
+        <button class="numpad-key" onclick="numpadDigit('7')">7</button>
+        <button class="numpad-key" onclick="numpadDigit('8')">8</button>
+        <button class="numpad-key" onclick="numpadDigit('9')">9</button>
+        <button class="numpad-key op" onclick="numpadOp('-')">−</button>
+
+        <!-- Row 3: 4 5 6 + -->
+        <button class="numpad-key" onclick="numpadDigit('4')">4</button>
+        <button class="numpad-key" onclick="numpadDigit('5')">5</button>
+        <button class="numpad-key" onclick="numpadDigit('6')">6</button>
+        <button class="numpad-key op" onclick="numpadOp('+')">+</button>
+
+        <!-- Row 4: 1 2 3 Done -->
+        <button class="numpad-key" onclick="numpadDigit('1')">1</button>
+        <button class="numpad-key" onclick="numpadDigit('2')">2</button>
+        <button class="numpad-key" onclick="numpadDigit('3')">3</button>
+        <button class="numpad-key done" onclick="numpadDone()">✓</button>
+
+        <!-- Row 5: 0(wide) . Cancel -->
+        <button class="numpad-key" style="grid-column: span 2;" onclick="numpadDigit('0')">0</button>
+        <button class="numpad-key" onclick="numpadDigit('.')">.</button>
+        <button class="numpad-key cancel" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+
+    <!-- DICE SECTION -->
+    <div class="dice-section" id="diceSection">
+      <div class="dice-selected"><span>Selected:</span> <span id="diceTotal">0</span></div>
+      <div class="dice-preview" id="dicePreview"></div>
+      <div class="dice-grid" id="diceGrid"></div>
+      <div class="dice-actions">
+        <button class="dice-cancel-btn" onclick="closeModal()">Cancel</button>
+        <button class="dice-add-btn" id="diceAddBtn" onclick="diceConfirm()" disabled>Add</button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- WIN MODAL -->
+<div class="win-modal-overlay" id="winOverlay">
+  <div class="win-modal">
+    <div class="win-trophy">🏆</div>
+    <div class="win-title" id="winTitle">TIM BIRU MENANG!</div>
+    <div class="win-subtitle" id="winSubtitle">Ronde selesai</div>
+    <div class="win-actions">
+      <button class="win-continue-btn" onclick="continueRound()">Lanjut</button>
+      <button class="win-reset-btn" onclick="fullReset()">Reset</button>
+    </div>
+  </div>
 </div>
 
-
-<div class="panel" id="panel">
-
-<div>Selected: <span id="selected">0</span></div>
-
-<div class="domino-grid">
-<div class="domino" onclick="add(1)">1</div>
-<div class="domino" onclick="add(2)">2</div>
-<div class="domino" onclick="add(3)">3</div>
-<div class="domino" onclick="add(4)">4</div>
-<div class="domino" onclick="add(5)">5</div>
-<div class="domino" onclick="add(6)">6</div>
+<!-- NAME EDIT -->
+<div class="name-edit-overlay" id="nameOverlay">
+  <div class="name-edit-box">
+    <h3 id="nameEditTitle">EDIT NAMA</h3>
+    <input type="text" class="name-input" id="nameInput" maxlength="12" />
+    <div class="name-edit-actions">
+      <button class="name-cancel-btn" onclick="closeNameEdit()">Batal</button>
+      <button class="name-ok-btn" onclick="saveName()">OK</button>
+    </div>
+  </div>
 </div>
-
-
-<div class="calc">
-<button onclick="num(7)">7</button>
-<button onclick="num(8)">8</button>
-<button onclick="num(9)">9</button>
-<button class="op" onclick="op('/')">÷</button>
-
-<button onclick="num(4)">4</button>
-<button onclick="num(5)">5</button>
-<button onclick="num(6)">6</button>
-<button class="op" onclick="op('*')">×</button>
-
-<button onclick="num(1)">1</button>
-<button onclick="num(2)">2</button>
-<button onclick="num(3)">3</button>
-<button class="op" onclick="op('-')">−</button>
-
-<button onclick="num(0)">0</button>
-<button onclick="dot()">.</button>
-<button class="equal" onclick="calc()">=</button>
-<button class="op" onclick="op('+')">+</button>
-
-<button class="clear" onclick="clearAll()">AC</button>
-</div>
-
-<div class="footer">
-<button class="cancel" onclick="closePanel()">Cancel</button>
-<button class="add" onclick="submitScore()">Add</button>
-</div>
-
-</div>
-
 
 <script>
+  const WIN_SCORE = 100;
 
-let side=null
-let value=0
-let exp=""
+  const state = {
+    blue: { name: 'TIM BIRU', scores: [], wins: 0 },
+    red:  { name: 'TIM MERAH', scores: [], wins: 0 },
+  };
 
-function openPanel(s){
-side=s
-document.getElementById("panel").style.display="block"
-}
+  let activeTeam = 'blue';
+  let activeTab = 'numpad';
+  let numpadExpr = '';
+  let diceSelected = [];
+  let editingTeam = null;
 
-function closePanel(){
-document.getElementById("panel").style.display="none"
-value=0
-exp=""
-update()
-}
+  // ─── DICE CONFIG ───────────────────────────────────
+  const DICE_VALUES = [1,2,3,4,5,6];
+  const DICE_PIPS = {
+    1: [[1,1]],
+    2: [[0,0],[2,2]],
+    3: [[0,0],[1,1],[2,2]],
+    4: [[0,0],[0,2],[2,0],[2,2]],
+    5: [[0,0],[0,2],[1,1],[2,0],[2,2]],
+    6: [[0,0],[0,1],[0,2],[2,0],[2,1],[2,2]],
+  };
 
-function update(){
-document.getElementById("selected").innerText=value
-}
+  function buildDiceGrid() {
+    const grid = document.getElementById('diceGrid');
+    grid.innerHTML = '';
+    DICE_VALUES.forEach(v => {
+      const tile = document.createElement('div');
+      tile.className = `dice-tile dice-${v}`;
+      tile.dataset.val = v;
+      const pips = DICE_PIPS[v];
+      // simple grid for pips
+      tile.style.display = 'grid';
+      tile.style.gridTemplateColumns = 'repeat(3,1fr)';
+      tile.style.gridTemplateRows = 'repeat(3,1fr)';
+      tile.style.padding = '8%';
 
-function add(v){
-value+=v
-update()
-}
+      const cells = Array(9).fill(null).map(() => {
+        const c = document.createElement('div'); return c;
+      });
 
-function num(n){
-exp+=n
-value=Number(exp)
-update()
-}
+      // map pip positions: row 0-2, col 0-2
+      const posMap = {
+        1: [[1,1]],
+        2: [[0,0],[2,2]],
+        3: [[0,0],[1,1],[2,2]],
+        4: [[0,0],[0,2],[2,0],[2,2]],
+        5: [[0,0],[0,2],[1,1],[2,0],[2,2]],
+        6: [[0,0],[0,2],[2,0],[2,2],[0,1],[2,1]],
+      };
+      const occupied = new Set((posMap[v]||[]).map(([r,c])=>r*3+c));
+      for(let i=0;i<9;i++){
+        const cell = document.createElement('div');
+        cell.style.display='flex'; cell.style.alignItems='center'; cell.style.justifyContent='center';
+        if(occupied.has(i)){
+          const pip = document.createElement('div');
+          pip.className='pip';
+          pip.style.width='70%'; pip.style.height='70%';
+          pip.style.borderRadius='50%';
+          pip.style.background='#fff';
+          cell.appendChild(pip);
+        }
+        tile.appendChild(cell);
+      }
 
-function op(o){
-exp+=o
-}
+      tile.addEventListener('click', () => toggleDice(v, tile));
+      grid.appendChild(tile);
+    });
+  }
 
-function dot(){
-exp+="."
-}
+  function toggleDice(val, tile) {
+    diceSelected.push(val);
+    tile.classList.add('selected');
+    // update pip colors
+    tile.querySelectorAll('.pip').forEach(p => p.style.background = getColor(activeTeam));
+    updateDiceUI();
+  }
 
-function calc(){
-try{
-value=eval(exp)
-exp=value
-update()
-}catch{}
-}
+  function updateDiceUI() {
+    const total = diceSelected.reduce((a,b) => a+b, 0);
+    document.getElementById('diceTotal').textContent = total;
 
-function clearAll(){
-exp=""
-value=0
-update()
-}
+    // preview
+    const preview = document.getElementById('dicePreview');
+    preview.innerHTML = '';
+    diceSelected.forEach((v, i) => {
+      if(i > 0) {
+        const plus = document.createElement('span');
+        plus.className = 'dice-preview-pip';
+        plus.textContent = '+';
+        preview.appendChild(plus);
+      }
+      const tile = document.createElement('div');
+      tile.className = 'dice-preview-tile';
+      tile.style.color = getColor(activeTeam);
+      tile.style.borderColor = getColor(activeTeam);
+      tile.textContent = v;
+      preview.appendChild(tile);
+    });
 
-function submitScore(){
+    document.getElementById('diceAddBtn').disabled = diceSelected.length === 0;
+  }
 
-if(side==="left"){
-let el=document.getElementById("scoreLeft")
-el.innerText=Number(el.innerText)+value
-}
+  function diceConfirm() {
+    const total = diceSelected.reduce((a,b) => a+b, 0);
+    addScore(activeTeam, total);
+    closeModal();
+  }
 
-if(side==="right"){
-let el=document.getElementById("scoreRight")
-el.innerText=Number(el.innerText)+value
-}
+  // ─── NUMPAD ────────────────────────────────────────
+  function numpadDigit(d) {
+    if(numpadExpr.length > 15) return;
+    numpadExpr += d;
+    renderNumpad();
+  }
+  function numpadOp(op) {
+    if(!numpadExpr) return;
+    const last = numpadExpr.slice(-1);
+    if(['+','-','×','÷'].includes(last)) numpadExpr = numpadExpr.slice(0,-1);
+    numpadExpr += op;
+    renderNumpad();
+  }
+  function numpadDel() {
+    numpadExpr = numpadExpr.slice(0,-1);
+    renderNumpad();
+  }
+  function numpadAC() { numpadExpr = ''; renderNumpad(); }
+  function renderNumpad() {
+    document.getElementById('numpadDisplay').textContent = numpadExpr || '0';
+  }
+  function numpadDone() {
+    try {
+      const expr = numpadExpr.replace(/×/g,'*').replace(/÷/g,'/');
+      const result = Function('"use strict"; return (' + expr + ')')();
+      if(!isNaN(result) && isFinite(result)) {
+        addScore(activeTeam, Math.round(result));
+      }
+    } catch(e) {}
+    closeModal();
+  }
 
-closePanel()
-}
+  // ─── SCORE LOGIC ───────────────────────────────────
+  function addScore(team, val) {
+    if(!val) return;
+    state[team].scores.push(val);
+    renderScores(team);
+    const total = getTotalScore(team);
+    document.getElementById('total' + cap(team)).textContent = total;
 
+    if(total >= WIN_SCORE) {
+      setTimeout(() => showWin(team), 200);
+    }
+  }
+
+  function getTotalScore(team) {
+    return state[team].scores.reduce((a,b) => a+b, 0);
+  }
+
+  function renderScores(team) {
+    const list = document.getElementById('list' + cap(team));
+    list.innerHTML = '';
+    state[team].scores.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'score-entry';
+      div.textContent = s;
+      div.dataset.idx = i;
+      makeLongPress(div, () => removeScore(team, i));
+      list.appendChild(div);
+    });
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function removeScore(team, idx) {
+    if(!confirm('Hapus skor ini?')) return;
+    state[team].scores.splice(idx, 1);
+    renderScores(team);
+    const total = getTotalScore(team);
+    document.getElementById('total' + cap(team)).textContent = total;
+  }
+
+  function makeLongPress(el, cb) {
+    let t;
+    el.addEventListener('touchstart', () => { t = setTimeout(cb, 600); });
+    el.addEventListener('touchend', () => clearTimeout(t));
+    el.addEventListener('touchmove', () => clearTimeout(t));
+  }
+
+  // ─── WIN ───────────────────────────────────────────
+  function showWin(team) {
+    const name = state[team].name;
+    document.getElementById('winTitle').textContent = name + ' MENANG!';
+    document.getElementById('winTitle').style.color = getColor(team);
+    const rival = team === 'blue' ? 'red' : 'blue';
+    document.getElementById('winSubtitle').textContent =
+      `${getTotalScore(team)} : ${getTotalScore(rival)}`;
+    state[team].wins++;
+    document.getElementById('wins' + cap(team)).textContent = state[team].wins;
+    document.getElementById('winOverlay').classList.add('open');
+  }
+
+  function continueRound() {
+    state.blue.scores = [];
+    state.red.scores = [];
+    renderScores('blue');
+    renderScores('red');
+    document.getElementById('totalBlue').textContent = '0';
+    document.getElementById('totalRed').textContent = '0';
+    document.getElementById('winOverlay').classList.remove('open');
+  }
+
+  function fullReset() {
+    state.blue.scores = []; state.blue.wins = 0;
+    state.red.scores = [];  state.red.wins = 0;
+    renderScores('blue'); renderScores('red');
+    document.getElementById('totalBlue').textContent = '0';
+    document.getElementById('totalRed').textContent = '0';
+    document.getElementById('winsBlue').textContent = '0';
+    document.getElementById('winsRed').textContent = '0';
+    document.getElementById('winOverlay').classList.remove('open');
+  }
+
+  function confirmReset() {
+    if(confirm('Reset semua skor?')) fullReset();
+  }
+
+  // ─── MODAL ─────────────────────────────────────────
+  function openModal(team) {
+    activeTeam = team;
+    const color = getColor(team);
+    document.documentElement.style.setProperty('--active-color', color);
+    numpadExpr = '';
+    renderNumpad();
+    diceSelected = [];
+    updateDiceUI();
+    buildDiceGrid();
+    switchTab('numpad');
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('numpadSection').classList.toggle('active', tab === 'numpad');
+    document.getElementById('diceSection').classList.toggle('active', tab === 'dice');
+    document.getElementById('tabNumpad').classList.toggle('active', tab === 'numpad');
+    document.getElementById('tabDice').classList.toggle('active', tab === 'dice');
+  }
+
+  // close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if(e.target === this) closeModal();
+  });
+
+  // ─── NAME EDIT ─────────────────────────────────────
+  function editName(team) {
+    editingTeam = team;
+    document.getElementById('nameEditTitle').textContent = 'EDIT NAMA TIM';
+    document.getElementById('nameEditTitle').style.color = getColor(team);
+    document.getElementById('nameInput').value = state[team].name;
+    document.querySelector('#nameOverlay .name-ok-btn').style.background = getColor(team);
+    document.getElementById('nameOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('nameInput').focus(), 100);
+  }
+
+  function saveName() {
+    const val = document.getElementById('nameInput').value.trim().toUpperCase();
+    if(val) {
+      state[editingTeam].name = val;
+      document.getElementById('name' + cap(editingTeam)).textContent = val;
+    }
+    closeNameEdit();
+  }
+
+  function closeNameEdit() {
+    document.getElementById('nameOverlay').classList.remove('open');
+  }
+
+  document.getElementById('nameInput').addEventListener('keydown', e => {
+    if(e.key === 'Enter') saveName();
+  });
+
+  // ─── UTILS ─────────────────────────────────────────
+  function getColor(team) { return team === 'blue' ? '#2196F3' : '#F44336'; }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 </script>
-
 </body>
 </html>
