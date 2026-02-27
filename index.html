@@ -615,7 +615,7 @@
 </div>
 
 <script>
-  const WIN_SCORE = 100;
+  const WIN_SCORE = 101;
 
   const state = {
     blue: { name: 'TIM BIRU', scores: [], wins: 0 },
@@ -766,7 +766,9 @@
     document.getElementById('total' + cap(team)).textContent = total;
 
     if(total >= WIN_SCORE) {
-      setTimeout(() => showWin(team), 200);
+      // Tim yang mencapai 101 = kalah, lawan yang menang
+      const winner = team === 'blue' ? 'red' : 'blue';
+      setTimeout(() => showWin(winner, team), 200);
     }
   }
 
@@ -804,15 +806,15 @@
   }
 
   // ─── WIN ───────────────────────────────────────────
-  function showWin(team) {
-    const name = state[team].name;
+  function showWin(winner, loser) {
+    const name = state[winner].name;
+    const loserName = state[loser].name;
     document.getElementById('winTitle').textContent = name + ' MENANG!';
-    document.getElementById('winTitle').style.color = getColor(team);
-    const rival = team === 'blue' ? 'red' : 'blue';
+    document.getElementById('winTitle').style.color = getColor(winner);
     document.getElementById('winSubtitle').textContent =
-      `${getTotalScore(team)} : ${getTotalScore(rival)}`;
-    state[team].wins++;
-    document.getElementById('wins' + cap(team)).textContent = state[team].wins;
+      loserName + ' mencapai ' + WIN_SCORE + ' poin — ' + name + ' meraih kemenangan!';
+    state[winner].wins++;
+    document.getElementById('wins' + cap(winner)).textContent = state[winner].wins;
     document.getElementById('winOverlay').classList.add('open');
   }
 
